@@ -2,7 +2,7 @@
 Main way of interacting with this package.
 """
 
-from rifsalignment.alignment import BaseAlignment
+from rifsalignment.basealign import BaseAlignment
 
 
 def align_csv(data_path: str, align_method: BaseAlignment, target_path: str = None, verbose: bool = False, quiet: bool = False):
