@@ -2,10 +2,10 @@
 CTC alignment algorithm.
 """
 
-from rifsalignment.basealign import BaseAlignment
-from rifsalignment.prepare_text import prepare_text
+from rifsalignment.algorithms.base_alignment import BaseAlignment
+from rifsalignment.datamodel.timedsegment import TimedSegment
+from rifsalignment.preprocess.prepare_text import prepare_text
 
-from itertools import islice
 from typing import List
 from transformers import (
     Wav2Vec2CTCTokenizer,
@@ -29,9 +29,7 @@ class CTC(BaseAlignment):
         audio_file: str,
         text_file: str,
         model: str,
-        n: int = 20,
-        m: int = 4,
-    ):
+    ) -> List[TimedSegment]:
         """
         Align the source and target audio files.
 
@@ -43,10 +41,6 @@ class CTC(BaseAlignment):
             The path to the source text file.
         model: str
             The path to the model to use for alignment. Can be a huggingface model or a local path.
-        n: int
-            The number of words to use for each partition.
-        m: int
-            The number of words to overlap between partitions.
 
         Returns
         -------
@@ -64,29 +58,29 @@ class CTC(BaseAlignment):
         audio_input, sr = librosa.load(audio_file, sr=16_000, mono=True)
 
         # Load and prepare text
-        with open(text_file, 'r') as f:
+        with open(text_file, "r") as f:
             transcripts = f.readlines()
-        transcripts = prepare_text(transcripts)
+        transcripts = prepare_text(transcripts, prepend_placeholder=True)
 
         alignments = CTC._ctc_align_with_transcript(
             audio=audio_input,
             transcripts=transcripts,
             tokenizer=tokenizer,
             processor=processor,
-            model=model
+            model=model,
         )
 
         return alignments
 
     @staticmethod
     def _ctc_align_with_transcript(
-            audio: np.ndarray,
-            transcripts: List[str],
-            tokenizer: Wav2Vec2CTCTokenizer,
-            processor: Wav2Vec2Processor,
-            model: Wav2Vec2ForCTC,
-            sr: int = 16_000
-    ):
+        audio: np.ndarray,
+        transcripts: List[str],
+        tokenizer: Wav2Vec2CTCTokenizer,
+        processor: Wav2Vec2Processor,
+        model: Wav2Vec2ForCTC,
+        sr: int = 16_000,
+    ) -> List[TimedSegment]:
         """
         Align the audio with the transcript.
 
@@ -122,12 +116,12 @@ class CTC(BaseAlignment):
         inv_vocab = {v: k for k, v in vocab.items()}
 
         # TODO: [UNK] might not be universal for other models, but it works for now
-        unk_id = vocab['[UNK]']
+        unk_id = vocab["[UNK]"]
 
         tokens = []
         for transcripts in transcripts:
             assert len(transcripts) > 0
-            tok_ids = tokenizer(transcripts.lower())['input_ids']
+            tok_ids = tokenizer(transcripts.lower())["input_ids"]
             tok_ids = np.array(tok_ids, dtype=int)
             tokens.append(tok_ids[tok_ids != unk_id])
 
@@ -135,20 +129,21 @@ class CTC(BaseAlignment):
         config = ctc_segmentation.CtcSegmentationParameters(char_list=char_list)
         config.index_duration = inputs.input_values.shape[1] / probs.size()[0] / sr
 
-        ground_truth_mat, utt_begin_indices = ctc_segmentation.prepare_token_list(config, tokens)
-        timings, char_probs, state_list = ctc_segmentation.ctc_segmentation(config, probs.numpy(), ground_truth_mat)
+        ground_truth_mat, utt_begin_indices = ctc_segmentation.prepare_token_list(
+            config, tokens
+        )
+        timings, char_probs, state_list = ctc_segmentation.ctc_segmentation(
+            config, probs.numpy(), ground_truth_mat
+        )
         segments = ctc_segmentation.determine_utterance_segments(
-            config,
-            utt_begin_indices,
-            char_probs,
-            timings,
-            transcripts
+            config, utt_begin_indices, char_probs, timings, transcripts
         )
 
-        timed_segments = [{"text": t, "start": p[0], "end": p[1], "conf": p[2]} for t, p in zip(transcripts, segments)]
+        timed_segments = [
+            TimedSegment(text=t, start=p[0], end=p[1])
+            for t, p in zip(transcripts, segments)
+        ]
+
+        # timed_segments = [{"text": t, "start": p[0], "end": p[1], "conf": p[2]} for t, p in zip(transcripts, segments)]
 
         return timed_segments
-
-
-
-
