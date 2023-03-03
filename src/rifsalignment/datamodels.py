@@ -1,6 +1,4 @@
-"""
-
-"""
+"""TimedSegment class."""
 
 from dataclasses import dataclass
 

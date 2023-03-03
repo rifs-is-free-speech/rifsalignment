@@ -1,10 +1,8 @@
-"""
-CTC alignment algorithm.
-"""
+"""Algorithms for alignment"""
 
-from rifsalignment.algorithms.base_alignment import BaseAlignment
-from rifsalignment.datamodel.timedsegment import TimedSegment
-from rifsalignment.preprocess.prepare_text import prepare_text
+from rifsalignment.base import BaseAlignment
+from rifsalignment.datamodels import TimedSegment
+from rifsalignment.preprocess import prepare_text
 
 from typing import List
 from transformers import (

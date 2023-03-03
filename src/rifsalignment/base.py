@@ -4,7 +4,7 @@ Base classes for the rifs alignment library.
 
 from abc import ABC, abstractmethod
 
-from rifsalignment.datamodel import TimedSegment
+from rifsalignment.datamodels import TimedSegment
 
 from typing import List
 
