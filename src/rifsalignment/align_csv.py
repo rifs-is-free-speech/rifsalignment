@@ -2,7 +2,7 @@
 Main way of interacting with this package.
 """
 
-from rifsalignment.algorithms.base_alignment import BaseAlignment
+from rifsalignment.base import BaseAlignment
 
 import pandas as pd
 import os
