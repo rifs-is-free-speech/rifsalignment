@@ -1,9 +1,11 @@
 """
-
+Preprocess the transcripts for alignment.
 """
 
 from typing import List
 from num2words import num2words
+
+from rifsalignment.datamodels import placeholder_text
 
 import regex as re
 
@@ -27,7 +29,7 @@ def prepare_text(transcripts: List[str], prepend_placeholder: bool = False):
     """
 
     # Strip every line from \n
-    transcripts = [l.strip() for l in transcripts]
+    transcripts = [line.strip() for line in transcripts]
 
     # Join every line with space
     transcripts = " ".join(transcripts)
@@ -40,11 +42,11 @@ def prepare_text(transcripts: List[str], prepend_placeholder: bool = False):
         [num2words(w, lang="dk", to="year") if w.isdigit() else w for w in transcripts]
     )
 
-    # Split and uppercase sentences
-    transcripts = [l.strip().upper() for l in transcripts.split(".")]
+    # Split and uppercase sentences. Up to -1 to remove last empty sentence after last period.
+    transcripts = [line.strip().upper() for line in transcripts.split(".")[:-1]]
 
     # Add placeholder text in beginning
     if prepend_placeholder:
-        transcripts.insert(0, "DETTE ER BARE EN PLADSHOLDER")
+        transcripts.insert(0, placeholder_text)
 
     return transcripts

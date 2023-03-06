@@ -1,4 +1,6 @@
-"""Algorithms for alignment"""
+"""
+Algorithms for alignment.
+"""
 
 from rifsalignment.base import BaseAlignment
 from rifsalignment.datamodels import TimedSegment
@@ -12,7 +14,6 @@ from transformers import (
 )
 import ctc_segmentation
 import numpy as np
-import warnings
 import librosa
 import torch
 
@@ -46,7 +47,7 @@ class CTC(BaseAlignment):
             The aligned audio and text.
         """
 
-        warnings.warn("CTC alignment requires a very large GPU.", RuntimeWarning)
+        print("WARNING! CTC alignment requires a very large GPU.")
 
         tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(model)
         processor = Wav2Vec2Processor.from_pretrained(model)
@@ -117,9 +118,9 @@ class CTC(BaseAlignment):
         unk_id = vocab["[UNK]"]
 
         tokens = []
-        for transcripts in transcripts:
-            assert len(transcripts) > 0
-            tok_ids = tokenizer(transcripts.lower())["input_ids"]
+        for transcript in transcripts:
+            assert len(transcript) > 0
+            tok_ids = tokenizer(transcript.lower())["input_ids"]
             tok_ids = np.array(tok_ids, dtype=int)
             tokens.append(tok_ids[tok_ids != unk_id])
 
