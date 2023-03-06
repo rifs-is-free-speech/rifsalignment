@@ -20,6 +20,7 @@ class BaseAlignment(ABC):
         audio_file: str,
         text_file: str,
         model: str,
+        **kwargs,
     ) -> List[TimedSegment]:
         """
         Align the source and target audio files.
@@ -32,5 +33,7 @@ class BaseAlignment(ABC):
             The path to the source text file.
         model: str
             The path to the model to use for alignment. Can be a huggingface model or a local path.
+        **kwargs
+            Additional keyword arguments to pass to the alignment algorithm.
         """
         ...

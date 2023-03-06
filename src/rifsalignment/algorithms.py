@@ -159,9 +159,7 @@ class StateMachineForLevenshtein(BaseAlignment):
 
     @staticmethod
     def align(
-        audio_file: str,
-        text_file: str,
-        model: str,
+        audio_file: str, text_file: str, model: str, **kwargs
     ) -> List[TimedSegment]:
         """
         Align the source and target audio files.
@@ -174,6 +172,8 @@ class StateMachineForLevenshtein(BaseAlignment):
             The path to the source text file.
         model: str
             The path to the model to use for alignment. Can be a huggingface model or a local path.
+        max_depth: int
+            The maximum depth of the permutations. Defaults to 10.
         """
 
         # TODO: Parse model path to this predictor.
@@ -197,6 +197,7 @@ class StateMachineForLevenshtein(BaseAlignment):
 
         # Generate all possible permutations of the predictions
         start = time.time()
+        max_depth = kwargs.get("max_depth", 10)
         all_permutations = []
         for i in range(len(all_predictions_text)):
             for j in range(i, len(all_predictions_text)):
@@ -207,10 +208,12 @@ class StateMachineForLevenshtein(BaseAlignment):
                         text=" ".join(all_predictions_text[i : j + 1]),
                     )
                 )
-        assert (
+                if j == i + max_depth:
+                    break
+        """assert (
             len(all_permutations)
             == len(all_predictions_text) * (len(all_predictions_text) + 1) / 2
-        )
+        )"""
         end = time.time()
         print(f"Finished generating all permutations. Total time: {end - start}")
 

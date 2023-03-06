@@ -42,8 +42,11 @@ def align_csv(
     # Load csv file
     all_csv = pd.read_csv(os.path.join(data_path, "all.csv"), header=0)
 
+    if target_path is None:
+        target_path = os.path.join(data_path, "alignments")
+        os.makedirs(target_path, exist_ok=True)
+
     # Retrieve audio and text files and parse to align
-    all_alignments = {}
     for i, row in all_csv.iterrows():
         if verbose and not quiet:
             print(f"Aligning {row['id']}")
@@ -53,18 +56,8 @@ def align_csv(
             text_file=os.path.join(data_path, "text", row["id"] + ".txt"),
             model=model,
         )
-        all_alignments[row["id"]] = alignments
 
-        if i == 2:
-            break
-
-    if target_path is None:
-        target_path = os.path.join(data_path, "alignments")
-        os.makedirs(target_path, exist_ok=True)
-
-    # Save alignments to csv
-    for id, alignments in all_alignments.items():
-        save_alignments(target_path=target_path, id=id, alignments=alignments)
+        save_alignments(target_path=target_path, id=row["id"], alignments=alignments)
 
 
 def save_alignments(target_path: str, id: str, alignments: List[TimedSegment]):
