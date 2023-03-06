@@ -210,10 +210,6 @@ class StateMachineForLevenshtein(BaseAlignment):
                 )
                 if j == i + max_depth:
                     break
-        """assert (
-            len(all_permutations)
-            == len(all_predictions_text) * (len(all_predictions_text) + 1) / 2
-        )"""
         end = time.time()
         print(f"Finished generating all permutations. Total time: {end - start}")
 
