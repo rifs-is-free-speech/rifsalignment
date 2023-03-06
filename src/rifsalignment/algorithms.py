@@ -6,16 +6,21 @@ from rifsalignment.base import BaseAlignment
 from rifsalignment.datamodels import TimedSegment
 from rifsalignment.preprocess import prepare_text
 
+from rifsstatemachine.functions import wav_to_utterances
+from rifsstatemachine.base_predictor import Predictor
+
 from typing import List
 from transformers import (
     Wav2Vec2CTCTokenizer,
     Wav2Vec2Processor,
     Wav2Vec2ForCTC,
 )
+from Levenshtein import ratio
 import ctc_segmentation
 import numpy as np
 import librosa
 import torch
+import time
 
 
 class CTC(BaseAlignment):
@@ -61,7 +66,7 @@ class CTC(BaseAlignment):
             transcripts = f.readlines()
         transcripts = prepare_text(transcripts, prepend_placeholder=True)
 
-        alignments = CTC._ctc_align_with_transcript(
+        alignments = CTC.ctc_align_with_transcript(
             audio=audio_input,
             transcripts=transcripts,
             tokenizer=tokenizer,
@@ -72,7 +77,8 @@ class CTC(BaseAlignment):
         return alignments
 
     @staticmethod
-    def _ctc_align_with_transcript(
+    @torch.no_grad()
+    def ctc_align_with_transcript(
         audio: np.ndarray,
         transcripts: List[str],
         tokenizer: Wav2Vec2CTCTokenizer,
@@ -107,9 +113,9 @@ class CTC(BaseAlignment):
         inputs = processor(audio, sampling_rate=16_000, return_tensors="pt")
 
         model.eval()
-        with torch.no_grad():
-            logits = model(inputs.input_values).logits[0]
-            probs = torch.nn.functional.softmax(logits, dim=-1)
+
+        logits = model(inputs.input_values).logits[0]
+        probs = torch.nn.functional.softmax(logits, dim=-1)
 
         vocab = tokenizer.get_vocab()
         inv_vocab = {v: k for k, v in vocab.items()}
@@ -143,6 +149,88 @@ class CTC(BaseAlignment):
             for t, p in zip(transcripts, segments)
         ]
 
-        # timed_segments = [{"text": t, "start": p[0], "end": p[1], "conf": p[2]} for t, p in zip(transcripts, segments)]
-
         return timed_segments
+
+
+class StateMachineForLevenshtein(BaseAlignment):
+    """
+    State machine alignment algorithm with Levenshtein.
+    """
+
+    @staticmethod
+    def align(
+        audio_file: str,
+        text_file: str,
+        model: str,
+    ) -> List[TimedSegment]:
+        """
+        Align the source and target audio files.
+
+        Parameters
+        ----------
+        audio_file: str
+            The path to the source audio wav file.
+        text_file: str
+            The path to the source text file.
+        model: str
+            The path to the model to use for alignment. Can be a huggingface model or a local path.
+        """
+
+        # TODO: Parse model path to this predictor.
+        predictor = Predictor()
+
+        # Load the audio file
+        audio_input, sr = librosa.load(audio_file, sr=16_000, mono=True)
+
+        # Load and prepare text
+        with open(text_file, "r") as f:
+            transcripts = f.readlines()
+        transcripts = prepare_text(transcripts, prepend_placeholder=False)
+
+        start = time.time()
+        all_predictions = wav_to_utterances(audio_input, model=predictor)
+        all_predictions_list = [pred for pred in all_predictions]
+        all_predictions_text = [pred.transcription for pred in all_predictions_list]
+        end = time.time()
+
+        print(f"Finished predicting with state machine. Total time: {end - start}")
+
+        # Generate all possible permutations of the predictions
+        start = time.time()
+        all_permutations = []
+        for i in range(len(all_predictions_text)):
+            for j in range(i, len(all_predictions_text)):
+                all_permutations.append(
+                    TimedSegment(
+                        start=all_predictions_list[i].start / sr,
+                        end=all_predictions_list[j].end / sr,
+                        text=" ".join(all_predictions_text[i : j + 1]),
+                    )
+                )
+        assert (
+            len(all_permutations)
+            == len(all_predictions_text) * (len(all_predictions_text) + 1) / 2
+        )
+        end = time.time()
+        print(f"Finished generating all permutations. Total time: {end - start}")
+
+        # Align the audio with the transcript
+        start = time.time()
+        alignments = []
+        for i, true_transcript in enumerate(transcripts):
+            all_sims = []
+            for pred in all_permutations:
+                sim = ratio(pred.text.upper(), true_transcript.upper())
+                all_sims.append(sim)
+            best_alignment = all_permutations[np.argmax(all_sims)]
+            alignments.append(
+                TimedSegment(
+                    start=best_alignment.start,
+                    end=best_alignment.end,
+                    text=true_transcript,
+                )
+            )
+        end = time.time()
+        print(f"Finished aligning with Levenshtein. Total time: {end - start}")
+
+        return alignments

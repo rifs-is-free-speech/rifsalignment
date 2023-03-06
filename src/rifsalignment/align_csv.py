@@ -55,6 +55,9 @@ def align_csv(
         )
         all_alignments[row["id"]] = alignments
 
+        if i == 2:
+            break
+
     if target_path is None:
         target_path = os.path.join(data_path, "alignments")
         os.makedirs(target_path, exist_ok=True)
