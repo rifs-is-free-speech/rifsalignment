@@ -6,7 +6,7 @@ from rifsalignment.base import BaseAlignment
 from rifsalignment.datamodels import TimedSegment
 from rifsalignment.preprocess import prepare_text
 
-from rifsstatemachine.functions import wav_to_utterances
+from rifsstatemachine.functions import wav_to_utterances, record_to_screen
 from rifsstatemachine.base_predictor import Predictor
 
 from typing import List
@@ -17,6 +17,7 @@ from transformers import (
 )
 from Levenshtein import ratio
 import ctc_segmentation
+import soundfile as sf
 import numpy as np
 import librosa
 import torch
@@ -193,7 +194,8 @@ class StateMachineForLevenshtein(BaseAlignment):
         all_predictions_text = [pred.transcription for pred in all_predictions_list]
         end = time.time()
 
-        print(f"Finished predicting with state machine. Total time: {end - start}")
+        if kwargs.get("verbose", False) and not kwargs.get("quiet", False):
+            print(f"Finished predicting with state machine. Total time: {end - start}")
 
         # Generate all possible permutations of the predictions
         start = time.time()
@@ -204,14 +206,15 @@ class StateMachineForLevenshtein(BaseAlignment):
                 all_permutations.append(
                     TimedSegment(
                         start=all_predictions_list[i].start / sr,
-                        end=all_predictions_list[j].end / sr,
-                        text=" ".join(all_predictions_text[i : j + 1]),
+                        end=all_predictions_list[j-1].end / sr,
+                        text=" ".join(all_predictions_text[i : j]),
                     )
                 )
-                if j == i + max_depth:
+                if j == i + max_depth - 1:
                     break
         end = time.time()
-        print(f"Finished generating all permutations. Total time: {end - start}")
+        if kwargs.get("verbose", False) and not kwargs.get("quiet", False):
+            print(f"Finished generating all permutations. Total time: {end - start}")
 
         # Align the audio with the transcript
         start = time.time()
@@ -222,6 +225,12 @@ class StateMachineForLevenshtein(BaseAlignment):
                 sim = ratio(pred.text.upper(), true_transcript.upper())
                 all_sims.append(sim)
             best_alignment = all_permutations[np.argmax(all_sims)]
+
+            if kwargs.get("verbose", False) and not kwargs.get("quiet", False):
+                print(f"Best alignment for {true_transcript} is {best_alignment.text} with score {np.max(all_sims)}")
+                print(f"True start: {best_alignment.start}, true end: {best_alignment.end}")
+                print()
+
             alignments.append(
                 TimedSegment(
                     start=best_alignment.start,
@@ -230,6 +239,15 @@ class StateMachineForLevenshtein(BaseAlignment):
                 )
             )
         end = time.time()
-        print(f"Finished aligning with Levenshtein. Total time: {end - start}")
+        if kwargs.get("verbose", False) and not kwargs.get("quiet", False):
+            print(f"Finished aligning with Levenshtein. Total time: {end - start}")
+
+        for a in alignments:
+            sf.write(
+                "data/raw/DummyDataset/audio_segmented/" + "wavfile" + str(a.start) + ".wav",
+                audio_input[int(a.start * sr) : int(a.end * sr)],
+                sr,
+                subtype='PCM_24'
+            )
 
         return alignments
