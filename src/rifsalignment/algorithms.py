@@ -242,12 +242,12 @@ class StateMachineForLevenshtein(BaseAlignment):
         if kwargs.get("verbose", False) and not kwargs.get("quiet", False):
             print(f"Finished aligning with Levenshtein. Total time: {end - start}")
 
-        for a in alignments:
+        """for a in alignments:
             sf.write(
                 "data/raw/DummyDataset/audio_segmented/" + "wavfile" + str(a.start) + ".wav",
                 audio_input[int(a.start * sr) : int(a.end * sr)],
                 sr,
                 subtype='PCM_24'
-            )
+            )"""
 
         return alignments
