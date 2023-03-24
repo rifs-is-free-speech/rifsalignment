@@ -90,9 +90,9 @@ class CTC(BaseAlignment):
     def ctc_align_with_transcript(
         audio: np.ndarray,
         transcripts: List[str],
-        tokenizer: Wav2Vec2CTCTokenizer,
-        processor: Wav2Vec2Processor,
-        model: Wav2Vec2ForCTC,
+        tokenizer,
+        processor,
+        model,
         sr: int = 16_000,
     ) -> List[TimedSegment]:
         """
