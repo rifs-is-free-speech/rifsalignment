@@ -10,17 +10,11 @@ from rifsstatemachine.functions import wav_to_utterances, record_to_screen
 from rifsstatemachine.base_predictor import Predictor
 
 from typing import List
-from transformers import (
-    Wav2Vec2CTCTokenizer,
-    Wav2Vec2Processor,
-    Wav2Vec2ForCTC,
-)
+
 from Levenshtein import ratio
-import ctc_segmentation
 import soundfile as sf
 import numpy as np
 import librosa
-import torch
 import time
 
 
@@ -37,6 +31,7 @@ class CTC(BaseAlignment):
         verbose: bool = False,
         quiet: bool = False,
     ) -> List[TimedSegment]:
+
         """
         Align the source and target audio files.
 
@@ -62,6 +57,12 @@ class CTC(BaseAlignment):
         assert model, "Model must be specified for CTC alignment."
 
         print("WARNING! CTC alignment requires a very large GPU.")
+
+        from transformers import (
+            Wav2Vec2CTCTokenizer,
+            Wav2Vec2Processor,
+            Wav2Vec2ForCTC,
+        )
 
         tokenizer = Wav2Vec2CTCTokenizer.from_pretrained(model)
         processor = Wav2Vec2Processor.from_pretrained(model)
@@ -118,6 +119,9 @@ class CTC(BaseAlignment):
         List
             The aligned audio and text.
         """
+
+        import ctc_segmentation
+        import torch
 
         inputs = processor(audio, sampling_rate=16_000, return_tensors="pt")
 
@@ -256,12 +260,12 @@ class StateMachineForLevenshtein(BaseAlignment):
         if verbose and not quiet:
             print(f"Finished aligning with Levenshtein. Total time: {end - start}")
 
-        """for a in alignments:
+        for a in alignments:
             sf.write(
                 "data/raw/DummyDataset/audio_segmented/" + "wavfile" + str(a.start) + ".wav",
                 audio_input[int(a.start * sr) : int(a.end * sr)],
                 sr,
                 subtype='PCM_24'
-            )"""
+            )
 
         return alignments
