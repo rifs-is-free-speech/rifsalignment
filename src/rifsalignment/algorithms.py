@@ -87,7 +87,6 @@ class CTC(BaseAlignment):
         return alignments
 
     @staticmethod
-    @torch.no_grad()
     def ctc_align_with_transcript(
         audio: np.ndarray,
         transcripts: List[str],
@@ -127,8 +126,9 @@ class CTC(BaseAlignment):
 
         model.eval()
 
-        logits = model(inputs.input_values).logits[0]
-        probs = torch.nn.functional.softmax(logits, dim=-1)
+        with torch.no_grad():
+            logits = model(inputs.input_values).logits[0]
+            probs = torch.nn.functional.softmax(logits, dim=-1)
 
         vocab = tokenizer.get_vocab()
         inv_vocab = {v: k for k, v in vocab.items()}
