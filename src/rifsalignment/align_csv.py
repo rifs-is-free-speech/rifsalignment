@@ -55,6 +55,9 @@ def align_csv(
             audio_file=os.path.join(data_path, "audio", row["id"] + ".wav"),
             text_file=os.path.join(data_path, "text", row["id"] + ".txt"),
             model=model,
+            verbose=verbose,
+            quiet=quiet,
+            # TODO: Parse kwargs from environment variables
         )
 
         save_alignments(target_path=target_path, id=row["id"], alignments=alignments)

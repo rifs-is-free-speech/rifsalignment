@@ -34,6 +34,8 @@ class CTC(BaseAlignment):
         audio_file: str,
         text_file: str,
         model: str,
+        verbose: bool = False,
+        quiet: bool = False,
     ) -> List[TimedSegment]:
         """
         Align the source and target audio files.
@@ -46,12 +48,18 @@ class CTC(BaseAlignment):
             The path to the source text file.
         model: str
             The path to the model to use for alignment. Can be a huggingface model or a local path.
+        verbose: bool
+            Whether to print the alignments progress with steps.
+        quiet: bool
+            Whether to print anything.
 
         Returns
         -------
         List
             The aligned audio and text.
         """
+
+        assert model, "Model must be specified for CTC alignment."
 
         print("WARNING! CTC alignment requires a very large GPU.")
 
@@ -160,7 +168,7 @@ class StateMachineForLevenshtein(BaseAlignment):
 
     @staticmethod
     def align(
-        audio_file: str, text_file: str, model: str, **kwargs
+        audio_file: str, text_file: str, model: str, verbose: bool = False, quiet: bool = False, **kwargs
     ) -> List[TimedSegment]:
         """
         Align the source and target audio files.
@@ -173,10 +181,16 @@ class StateMachineForLevenshtein(BaseAlignment):
             The path to the source text file.
         model: str
             The path to the model to use for alignment. Can be a huggingface model or a local path.
+        verbose: bool
+            Whether to print verbose output. Defaults to False.
+        quiet: bool
+            Whether to print any output. Defaults to False.
         max_depth: int
             The maximum depth of the permutations. Defaults to 10.
         """
 
+        if verbose and not quiet:
+            print("This model does not take a model parameter. Defaulting to 'Alvenir/wav2vec2-base-da-ft-nst''.")
         # TODO: Parse model path to this predictor.
         predictor = Predictor()
 
@@ -194,7 +208,7 @@ class StateMachineForLevenshtein(BaseAlignment):
         all_predictions_text = [pred.transcription for pred in all_predictions_list]
         end = time.time()
 
-        if kwargs.get("verbose", False) and not kwargs.get("quiet", False):
+        if verbose and not quiet:
             print(f"Finished predicting with state machine. Total time: {end - start}")
 
         # Generate all possible permutations of the predictions
@@ -213,7 +227,7 @@ class StateMachineForLevenshtein(BaseAlignment):
                 if j == i + max_depth - 1:
                     break
         end = time.time()
-        if kwargs.get("verbose", False) and not kwargs.get("quiet", False):
+        if verbose and not quiet:
             print(f"Finished generating all permutations. Total time: {end - start}")
 
         # Align the audio with the transcript
@@ -226,7 +240,7 @@ class StateMachineForLevenshtein(BaseAlignment):
                 all_sims.append(sim)
             best_alignment = all_permutations[np.argmax(all_sims)]
 
-            if kwargs.get("verbose", False) and not kwargs.get("quiet", False):
+            if verbose and not quiet:
                 print(f"Best alignment for {true_transcript} is {best_alignment.text} with score {np.max(all_sims)}")
                 print(f"True start: {best_alignment.start}, true end: {best_alignment.end}")
                 print()
@@ -239,7 +253,7 @@ class StateMachineForLevenshtein(BaseAlignment):
                 )
             )
         end = time.time()
-        if kwargs.get("verbose", False) and not kwargs.get("quiet", False):
+        if verbose and not quiet:
             print(f"Finished aligning with Levenshtein. Total time: {end - start}")
 
         """for a in alignments:
