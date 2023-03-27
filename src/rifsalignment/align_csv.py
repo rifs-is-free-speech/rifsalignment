@@ -62,10 +62,17 @@ def align_csv(
             # TODO: Parse kwargs from environment variables
         )
 
-        save_alignments(data_path=data_path, target_path=target_path, id=row["id"], alignments=alignments)
+        save_alignments(
+            data_path=data_path,
+            target_path=target_path,
+            id=row["id"],
+            alignments=alignments,
+        )
 
 
-def save_alignments(data_path: str, target_path: str, id: str, alignments: List[TimedSegment]):
+def save_alignments(
+    data_path: str, target_path: str, id: str, alignments: List[TimedSegment]
+):
     """
     Saves a list of alignments to a csv file in the target location.
 
@@ -83,7 +90,9 @@ def save_alignments(data_path: str, target_path: str, id: str, alignments: List[
     """
 
     # Load the audio file
-    audio, sr = librosa.load(os.path.join(data_path, "audio", f"{id}.wav"), sr=16_000, mono=True)
+    audio, sr = librosa.load(
+        os.path.join(data_path, "audio", f"{id}.wav"), sr=16_000, mono=True
+    )
 
     os.makedirs(os.path.join(target_path, id), exist_ok=True)
     with open(os.path.join(target_path, id, "segments.csv"), "w+") as f:
@@ -95,11 +104,13 @@ def save_alignments(data_path: str, target_path: str, id: str, alignments: List[
             if segment.text == placeholder_text:
                 continue
 
-            f.write(f"segment_{str(segment.start)}.wav,{segment.start},{segment.end},{segment.text}\n")
+            f.write(
+                f"segment_{str(segment.start)}.wav,{segment.start},{segment.end},{segment.text}\n"
+            )
 
             sf.write(
                 os.path.join(target_path, id, f"segment_{str(segment.start)}.wav"),
-                audio[int(segment.start * sr):int(segment.end * sr)],
+                audio[int(segment.start * sr) : int(segment.end * sr)],
                 sr,
-                subtype='PCM_24'
+                subtype="PCM_24",
             )

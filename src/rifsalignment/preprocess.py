@@ -43,7 +43,7 @@ def prepare_text(transcripts: List[str], prepend_placeholder: bool = False):
     )
 
     # Split and uppercase sentences. Up to -1 to remove last empty sentence after last period.
-    transcripts = [line.strip().upper() for line in transcripts.split(".")[:-1]]
+    transcripts = [line.strip().lower() for line in transcripts.split(".")[:-1]]
 
     # Add placeholder text in beginning
     if prepend_placeholder:

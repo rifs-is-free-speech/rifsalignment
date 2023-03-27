@@ -6,13 +6,12 @@ from rifsalignment.base import BaseAlignment
 from rifsalignment.datamodels import TimedSegment
 from rifsalignment.preprocess import prepare_text
 
-from rifsstatemachine.functions import wav_to_utterances, record_to_screen
+from rifsstatemachine.functions import wav_to_utterances
 from rifsstatemachine.base_predictor import Predictor
 
 from typing import List
 
 from Levenshtein import ratio
-import soundfile as sf
 import numpy as np
 import librosa
 import time
@@ -172,7 +171,12 @@ class StateMachineForLevenshtein(BaseAlignment):
 
     @staticmethod
     def align(
-        audio_file: str, text_file: str, model: str, verbose: bool = False, quiet: bool = False, **kwargs
+        audio_file: str,
+        text_file: str,
+        model: str,
+        verbose: bool = False,
+        quiet: bool = False,
+        **kwargs,
     ) -> List[TimedSegment]:
         """
         Align the source and target audio files.
@@ -194,12 +198,15 @@ class StateMachineForLevenshtein(BaseAlignment):
         """
 
         if verbose and not quiet:
-            print("This model does not take a model parameter. Defaulting to 'Alvenir/wav2vec2-base-da-ft-nst'.")
+            print(
+                "This model does not take a model parameter. Defaulting to 'Alvenir/wav2vec2-base-da-ft-nst'."
+            )
         # TODO: Parse model path to this predictor.
         predictor = Predictor()
 
         # Load the audio file
         audio_input, sr = librosa.load(audio_file, sr=16_000, mono=True)
+        assert sr == 16_000
 
         # Load and prepare text
         with open(text_file, "r") as f:
@@ -224,8 +231,8 @@ class StateMachineForLevenshtein(BaseAlignment):
                 all_permutations.append(
                     TimedSegment(
                         start=all_predictions_list[i].start / sr,
-                        end=all_predictions_list[j-1].end / sr,
-                        text=" ".join(all_predictions_text[i : j]),
+                        end=all_predictions_list[j - 1].end / sr,
+                        text=" ".join(all_predictions_text[i:j]),
                     )
                 )
                 if j == i + max_depth - 1:
@@ -245,8 +252,12 @@ class StateMachineForLevenshtein(BaseAlignment):
             best_alignment = all_permutations[np.argmax(all_sims)]
 
             if verbose and not quiet:
-                print(f"Best alignment for {true_transcript} is {best_alignment.text} with score {np.max(all_sims)}")
-                print(f"True start: {best_alignment.start}, true end: {best_alignment.end}")
+                print(
+                    f"Best alignment for {true_transcript} is {best_alignment.text} with score {np.max(all_sims)}"
+                )
+                print(
+                    f"True start: {best_alignment.start}, true end: {best_alignment.end}"
+                )
                 print()
 
             alignments.append(
@@ -264,3 +275,58 @@ class StateMachineForLevenshtein(BaseAlignment):
 
 
 # TODO: Add a class for the state machine unsupervised (without text).
+class StateMachineUnsupervised(BaseAlignment):
+    """
+    Unsupervised alignment with state machine
+    """
+
+    @staticmethod
+    def align(
+        audio_file: str,
+        text_file: str,
+        model: str,
+        verbose: bool = False,
+        quiet: bool = False,
+    ) -> List[TimedSegment]:
+        """
+        Align a single audio file with no text.
+
+        Parameters
+        ----------
+        audio_file: str
+            The path to the source audio wav file.
+        text_file: str
+            The path to the source text file.
+        model: str
+            The path to the model to use for alignment. Can be a huggingface model or a local path.
+        verbose: bool
+            Whether to print verbose output. Defaults to False.
+        quiet: bool
+            Whether to print any output. Defaults to False.
+        """
+
+        if verbose and not quiet:
+            print(
+                "This model does not take a model parameter. Defaulting to 'Alvenir/wav2vec2-base-da-ft-nst'."
+            )
+        # TODO: Parse model path to this predictor.
+        predictor = Predictor()
+
+        # Load the audio file
+        audio_input, sr = librosa.load(audio_file, sr=16_000, mono=True)
+        assert sr == 16_000
+
+        all_predictions = wav_to_utterances(audio_input, model=predictor)
+        all_predictions_list = [pred for pred in all_predictions]
+
+        alignments = []
+        for pred in all_predictions_list:
+            alignments.append(
+                TimedSegment(
+                    start=pred.start / sr,
+                    end=pred.end / sr,
+                    text=pred.transcription,
+                )
+            )
+
+        return alignments
