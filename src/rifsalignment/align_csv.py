@@ -7,7 +7,9 @@ from rifsalignment.datamodels import placeholder_text, TimedSegment
 
 from typing import List
 
+import soundfile as sf
 import pandas as pd
+import librosa
 import os
 
 
@@ -60,15 +62,17 @@ def align_csv(
             # TODO: Parse kwargs from environment variables
         )
 
-        save_alignments(target_path=target_path, id=row["id"], alignments=alignments)
+        save_alignments(data_path=data_path, target_path=target_path, id=row["id"], alignments=alignments)
 
 
-def save_alignments(target_path: str, id: str, alignments: List[TimedSegment]):
+def save_alignments(data_path: str, target_path: str, id: str, alignments: List[TimedSegment]):
     """
     Saves a list of alignments to a csv file in the target location.
 
     Parameters
     ----------
+    data_path: str
+        The path to the csv file containing the audio and text files.
     target_path: str
         The path to the folder to save the aligned files to.
     id: str
@@ -77,11 +81,25 @@ def save_alignments(target_path: str, id: str, alignments: List[TimedSegment]):
         The alignments to save.
 
     """
-    with open(os.path.join(target_path, id + ".csv"), "w+") as f:
-        f.write("start,end,text\n")
+
+    # Load the audio file
+    audio, sr = librosa.load(os.path.join(data_path, "audio", f"{id}.wav"), sr=16_000, mono=True)
+
+    os.makedirs(os.path.join(target_path, id), exist_ok=True)
+    with open(os.path.join(target_path, id, "segments.csv"), "w+") as f:
+        f.write("file,start,end,text\n")
 
         for segment in alignments:
+
             # Skip placeholder text
             if segment.text == placeholder_text:
                 continue
-            f.write(f"{segment.start},{segment.end},{segment.text}\n")
+
+            f.write(f"segment_{str(segment.start)}.wav,{segment.start},{segment.end},{segment.text}\n")
+
+            sf.write(
+                os.path.join(target_path, id, f"segment_{str(segment.start)}.wav"),
+                audio[int(segment.start * sr):int(segment.end * sr)],
+                sr,
+                subtype='PCM_24'
+            )

@@ -194,7 +194,7 @@ class StateMachineForLevenshtein(BaseAlignment):
         """
 
         if verbose and not quiet:
-            print("This model does not take a model parameter. Defaulting to 'Alvenir/wav2vec2-base-da-ft-nst''.")
+            print("This model does not take a model parameter. Defaulting to 'Alvenir/wav2vec2-base-da-ft-nst'.")
         # TODO: Parse model path to this predictor.
         predictor = Predictor()
 
@@ -260,12 +260,7 @@ class StateMachineForLevenshtein(BaseAlignment):
         if verbose and not quiet:
             print(f"Finished aligning with Levenshtein. Total time: {end - start}")
 
-        for a in alignments:
-            sf.write(
-                "data/raw/DummyDataset/audio_segmented/" + "wavfile" + str(a.start) + ".wav",
-                audio_input[int(a.start * sr) : int(a.end * sr)],
-                sr,
-                subtype='PCM_24'
-            )
-
         return alignments
+
+
+# TODO: Add a class for the state machine unsupervised (without text).
