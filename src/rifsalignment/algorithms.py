@@ -307,7 +307,7 @@ class StateMachineUnsupervised(BaseAlignment):
 
         if verbose and not quiet:
             print(
-                "This model does not take a model parameter. Defaulting to 'Alvenir/wav2vec2-base-da-ft-nst'."
+                "This algorithm does not take a model parameter. Defaulting to 'Alvenir/wav2vec2-base-da-ft-nst'."
             )
         # TODO: Parse model path to this predictor.
         predictor = Predictor()
@@ -326,6 +326,61 @@ class StateMachineUnsupervised(BaseAlignment):
                     start=pred.start / sr,
                     end=pred.end / sr,
                     text=pred.transcription,
+                )
+            )
+
+        return alignments
+
+
+class StateMachineUnsupervisedNoModel(BaseAlignment):
+    """
+    Unsupervised alignment with state machine
+    """
+
+    @staticmethod
+    def align(
+        audio_file: str,
+        text_file: str,
+        model: str,
+        verbose: bool = False,
+        quiet: bool = False,
+    ) -> List[TimedSegment]:
+        """
+        Align a single audio file with no text.
+
+        Parameters
+        ----------
+        audio_file: str
+            The path to the source audio wav file.
+        text_file: str
+            The path to the source text file.
+        model: str
+            The path to the model to use for alignment. Can be a huggingface model or a local path.
+        verbose: bool
+            Whether to print verbose output. Defaults to False.
+        quiet: bool
+            Whether to print any output. Defaults to False.
+        """
+
+        if verbose and not quiet:
+            print(
+                "This algorithm does not take a model parameter."
+            )
+
+        # Load the audio file
+        audio_input, sr = librosa.load(audio_file, sr=16_000, mono=True)
+        assert sr == 16_000
+
+        all_predictions = wav_to_utterances(audio_input)
+        all_predictions_list = [pred for pred in all_predictions]
+
+        alignments = []
+        for pred in all_predictions_list:
+            alignments.append(
+                TimedSegment(
+                    start=pred.start / sr,
+                    end=pred.end / sr,
+                    text="",
                 )
             )
 

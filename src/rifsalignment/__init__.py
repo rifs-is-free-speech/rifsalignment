@@ -9,14 +9,16 @@ from rifsalignment.algorithms import (
     CTC,
     StateMachineForLevenshtein,
     StateMachineUnsupervised,
+    StateMachineUnsupervisedNoModel,
 )
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 alignment_methods = {
     "ctc": CTC,
     "StateMachineForLevenshtein": StateMachineForLevenshtein,
     "StateMachineUnsupervised": StateMachineUnsupervised,
+    "StateMachineUnsupervisedNoModel": StateMachineUnsupervisedNoModel,
 }
 
 __all__ = ["alignment_methods", "align_csv", "prepare_text", "TimedSegment"]
