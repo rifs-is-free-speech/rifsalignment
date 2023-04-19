@@ -335,7 +335,7 @@ class StateMachineUnsupervised(BaseAlignment):
         alignments = []
         for pred in all_predictions_list:
             if kwargs.get("max_duration", 0) > 0:
-                if best_alignment.end - best_alignment.start > kwargs.get(
+                if (pred.end / sr) - (pred.start / sr) > kwargs.get(
                     "max_duration", 0
                 ):
                     continue
@@ -397,7 +397,7 @@ class StateMachineUnsupervisedNoModel(BaseAlignment):
         alignments = []
         for pred in all_predictions_list:
             if kwargs.get("max_duration", 0) > 0:
-                if best_alignment.end - best_alignment.start > kwargs.get(
+                if (pred.end / sr) - (pred.start / sr) > kwargs.get(
                     "max_duration", 0
                 ):
                     continue
