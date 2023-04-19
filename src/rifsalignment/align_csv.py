@@ -21,6 +21,7 @@ def align_csv(
     target_path: str = None,
     verbose: bool = False,
     quiet: bool = False,
+    max_duration: float = 15,
 ):
     """
     Adapter fucntion. Primarily serves to make rifsalignment compatible with the rifs CLI.
@@ -40,6 +41,8 @@ def align_csv(
         Whether to print the alignments progress with steps.
     quiet: bool
         Prints nothing.
+    max_duration: float
+        The maximum length of a segment in seconds.
     """
 
     # Load csv file
@@ -101,7 +104,11 @@ def align_csv(
 
 
 def save_alignments(
-    data_path: str, target_path: str, id: str, alignments: List[TimedSegment]
+    data_path: str,
+    target_path: str,
+    id: str,
+    alignments: List[TimedSegment],
+    max_duration: float = 15,
 ):
     """
     Saves a list of alignments to a csv file in the target location.
@@ -116,6 +123,8 @@ def save_alignments(
         The id of the file to save.
     alignments: List[TimedSegment]
         The alignments to save.
+    max_duration: float
+        The maximum length of a segment in seconds.
 
     """
 
@@ -132,6 +141,14 @@ def save_alignments(
 
             # Skip placeholder text
             if segment.text == placeholder_text:
+                continue
+
+            # Skip segments with no text
+            if segment.text == "" or segment.model_output == "":
+                continue
+
+            # Skip segments longer than 15 seconds
+            if segment.end - segment.start >= max_duration:
                 continue
 
             f.write(
