@@ -339,6 +339,8 @@ class StateMachineUnsupervised(BaseAlignment):
                     "max_duration", 0
                 ):
                     continue
+            if pred.transcription == "":
+                continue
             alignments.append(
                 TimedSegmentWithModelOutput(
                     start=pred.start / sr,
