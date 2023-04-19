@@ -29,6 +29,7 @@ class CTC(BaseAlignment):
         model: str,
         verbose: bool = False,
         quiet: bool = False,
+        **kwargs,
     ) -> List[TimedSegment]:
 
         """
@@ -93,6 +94,7 @@ class CTC(BaseAlignment):
         processor,
         model,
         sr: int = 16_000,
+        **kwargs,
     ) -> List[TimedSegment]:
         """
         Align the audio with the transcript.
@@ -195,6 +197,8 @@ class StateMachineForLevenshtein(BaseAlignment):
             Whether to print any output. Defaults to False.
         max_depth: int
             The maximum depth of the permutations. Defaults to 10.
+        max_duration: float
+            The maximum duration of the audio file to align. Skip of too long.
         """
 
         if verbose and not quiet:
@@ -260,6 +264,11 @@ class StateMachineForLevenshtein(BaseAlignment):
                 )
                 print()
 
+            if kwargs.get("max_duration", 0) > 0:
+                if best_alignment.end - best_alignment.start > kwargs.get(
+                    "max_duration", 0
+                ):
+                    continue
             alignments.append(
                 TimedSegmentWithModelOutput(
                     start=best_alignment.start,
@@ -288,6 +297,7 @@ class StateMachineUnsupervised(BaseAlignment):
         model: str,
         verbose: bool = False,
         quiet: bool = False,
+        **kwargs,
     ) -> List[TimedSegment]:
         """
         Align a single audio file with no text.
@@ -304,6 +314,8 @@ class StateMachineUnsupervised(BaseAlignment):
             Whether to print verbose output. Defaults to False.
         quiet: bool
             Whether to print any output. Defaults to False.
+        max_duration: float
+            The maximum duration of the audio file to align. Skip of too long.
         """
 
         if verbose and not quiet:
@@ -322,6 +334,11 @@ class StateMachineUnsupervised(BaseAlignment):
 
         alignments = []
         for pred in all_predictions_list:
+            if kwargs.get("max_duration", 0) > 0:
+                if best_alignment.end - best_alignment.start > kwargs.get(
+                    "max_duration", 0
+                ):
+                    continue
             alignments.append(
                 TimedSegmentWithModelOutput(
                     start=pred.start / sr,
@@ -346,6 +363,7 @@ class StateMachineUnsupervisedNoModel(BaseAlignment):
         model: str,
         verbose: bool = False,
         quiet: bool = False,
+        **kwargs,
     ) -> List[TimedSegment]:
         """
         Align a single audio file with no text.
@@ -362,6 +380,8 @@ class StateMachineUnsupervisedNoModel(BaseAlignment):
             Whether to print verbose output. Defaults to False.
         quiet: bool
             Whether to print any output. Defaults to False.
+        max_duration: float
+            The maximum duration of the audio file to align. Skip of too long.
         """
 
         if verbose and not quiet:
@@ -376,6 +396,11 @@ class StateMachineUnsupervisedNoModel(BaseAlignment):
 
         alignments = []
         for pred in all_predictions_list:
+            if kwargs.get("max_duration", 0) > 0:
+                if best_alignment.end - best_alignment.start > kwargs.get(
+                    "max_duration", 0
+                ):
+                    continue
             alignments.append(
                 TimedSegmentWithModelOutput(
                     start=pred.start / sr,
