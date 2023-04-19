@@ -6,6 +6,7 @@ from rifsalignment.base import BaseAlignment
 from rifsalignment.datamodels import placeholder_text, TimedSegment
 
 from typing import List
+from glob import glob
 
 import soundfile as sf
 import pandas as pd
@@ -48,26 +49,57 @@ def align_csv(
         target_path = os.path.join(data_path, "alignments")
         os.makedirs(target_path, exist_ok=True)
 
-    # Retrieve audio and text files and parse to align
-    for i, row in all_csv.iterrows():
-        if verbose and not quiet:
-            print(f"Aligning {row['id']}")
+    if 'id' in all_csv:
+        # Retrieve audio and text files and parse to align
+        for i, row in all_csv.iterrows():
+            if verbose and not quiet:
+                print(f"Aligning {row['id']}")
 
-        alignments = align_method.align(
-            audio_file=os.path.join(data_path, "audio", row["id"] + ".wav"),
-            text_file=os.path.join(data_path, "text", row["id"] + ".txt"),
-            model=model,
-            verbose=verbose,
-            quiet=quiet,
-            # TODO: Parse kwargs from environment variables
-        )
+            alignments = align_method.align(
+                audio_file=os.path.join(data_path, "audio", row["id"] + ".wav"),
+                text_file=os.path.join(data_path, "text", row["id"] + ".txt"),
+                model=model,
+                verbose=verbose,
+                quiet=quiet,
+                # TODO: Parse kwargs from environment variables
+            )
 
-        save_alignments(
-            data_path=data_path,
-            target_path=target_path,
-            id=row["id"],
-            alignments=alignments,
-        )
+            save_alignments(
+                data_path=data_path,
+                target_path=target_path,
+                id=row["id"],
+                alignments=alignments,
+            )
+
+    else:
+
+        all_wav_files = glob(os.path.join(data_path, "audio/**/*.wav"), recursive=True)
+
+        for wav_file_path in all_wav_files:
+            id = wav_file_path.replace(os.path.join(data_path, "audio/"), "").replace(".wav", "")
+
+            if verbose and not quiet:
+                print(f"Aligning {id}")
+
+            alignments = align_method.align(
+                audio_file=os.path.join(data_path, "audio", id + ".wav"),
+                text_file=os.path.join(data_path, "text", id + ".txt"),
+                model=model,
+                verbose=verbose,
+                quiet=quiet,
+                # TODO: Parse kwargs from environment variables
+            )
+
+            save_alignments(
+                data_path=data_path,
+                target_path=target_path,
+                id=id,
+                alignments=alignments,
+            )
+
+
+
+
 
 
 def save_alignments(
@@ -96,7 +128,7 @@ def save_alignments(
 
     os.makedirs(os.path.join(target_path, id), exist_ok=True)
     with open(os.path.join(target_path, id, "segments.csv"), "w+") as f:
-        f.write("file,start,end,text\n")
+        f.write("file,start,end,text,model_output\n")
 
         for segment in alignments:
 
@@ -105,7 +137,7 @@ def save_alignments(
                 continue
 
             f.write(
-                f"segment_{str(segment.start)}.wav,{segment.start},{segment.end},{segment.text}\n"
+                f"segment_{str(segment.start)}.wav,{segment.start},{segment.end},{segment.text},{segment.model_output}\n"
             )
 
             sf.write(

@@ -3,7 +3,7 @@ Algorithms for alignment.
 """
 
 from rifsalignment.base import BaseAlignment
-from rifsalignment.datamodels import TimedSegment
+from rifsalignment.datamodels import TimedSegment, TimedSegmentWithModelOutput
 from rifsalignment.preprocess import prepare_text
 
 from rifsstatemachine.functions import wav_to_utterances
@@ -249,7 +249,7 @@ class StateMachineForLevenshtein(BaseAlignment):
             for pred in all_permutations:
                 sim = ratio(pred.text.upper(), true_transcript.upper())
                 all_sims.append(sim)
-            best_alignment = all_permutations[np.argmax(all_sims)]
+            best_alignment = all_permutations[np.argmax(all_sims)].lower()
 
             if verbose and not quiet:
                 print(
@@ -261,10 +261,11 @@ class StateMachineForLevenshtein(BaseAlignment):
                 print()
 
             alignments.append(
-                TimedSegment(
+                TimedSegmentWithModelOutput(
                     start=best_alignment.start,
                     end=best_alignment.end,
                     text=true_transcript,
+                    model_output=best_alignment.text,
                 )
             )
         end = time.time()
@@ -322,10 +323,11 @@ class StateMachineUnsupervised(BaseAlignment):
         alignments = []
         for pred in all_predictions_list:
             alignments.append(
-                TimedSegment(
+                TimedSegmentWithModelOutput(
                     start=pred.start / sr,
                     end=pred.end / sr,
-                    text=pred.transcription,
+                    text="",
+                    model_output=pred.transcription,
                 )
             )
 
@@ -377,10 +379,11 @@ class StateMachineUnsupervisedNoModel(BaseAlignment):
         alignments = []
         for pred in all_predictions_list:
             alignments.append(
-                TimedSegment(
+                TimedSegmentWithModelOutput(
                     start=pred.start / sr,
                     end=pred.end / sr,
                     text="",
+                    model_output="",
                 )
             )
 
