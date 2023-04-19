@@ -49,7 +49,7 @@ def align_csv(
         target_path = os.path.join(data_path, "alignments")
         os.makedirs(target_path, exist_ok=True)
 
-    if 'id' in all_csv:
+    if "id" in all_csv:
         # Retrieve audio and text files and parse to align
         for i, row in all_csv.iterrows():
             if verbose and not quiet:
@@ -76,7 +76,9 @@ def align_csv(
         all_wav_files = glob(os.path.join(data_path, "audio/**/*.wav"), recursive=True)
 
         for wav_file_path in all_wav_files:
-            id = wav_file_path.replace(os.path.join(data_path, "audio/"), "").replace(".wav", "")
+            id = wav_file_path.replace(os.path.join(data_path, "audio/"), "").replace(
+                ".wav", ""
+            )
 
             if verbose and not quiet:
                 print(f"Aligning {id}")
@@ -96,10 +98,6 @@ def align_csv(
                 id=id,
                 alignments=alignments,
             )
-
-
-
-
 
 
 def save_alignments(
@@ -137,12 +135,12 @@ def save_alignments(
                 continue
 
             f.write(
-                f"segment_{str(segment.start)}.wav,{segment.start},{segment.end},{segment.text},{segment.model_output}\n"
+                f"segment_{str(segment.start)}.wav,{segment.start},{segment.end},{segment.text},{segment.model_output}\n"  # noqa: E501
             )
 
             sf.write(
                 os.path.join(target_path, id, f"segment_{str(segment.start)}.wav"),
-                audio[int(segment.start * sr) : int(segment.end * sr)],
+                audio[int(segment.start * sr) : int(segment.end * sr)],  # noqa: E203
                 sr,
                 subtype="PCM_24",
             )

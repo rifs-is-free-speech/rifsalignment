@@ -22,6 +22,7 @@ class TimedSegment:
     end: float
     text: str
 
+
 @dataclass
 class TimedSegmentWithModelOutput:
     """

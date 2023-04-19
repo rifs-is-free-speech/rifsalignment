@@ -365,9 +365,7 @@ class StateMachineUnsupervisedNoModel(BaseAlignment):
         """
 
         if verbose and not quiet:
-            print(
-                "This algorithm does not take a model parameter."
-            )
+            print("This algorithm does not take a model parameter.")
 
         # Load the audio file
         audio_input, sr = librosa.load(audio_file, sr=16_000, mono=True)

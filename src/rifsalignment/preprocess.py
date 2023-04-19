@@ -35,7 +35,7 @@ def prepare_text(transcripts: List[str], prepend_placeholder: bool = False):
     transcripts = " ".join(transcripts)
 
     # Remove special characters
-    transcripts = re.sub('[\,\?\!\-\;\:"]', "", transcripts)
+    transcripts = re.sub('[\,\?\!\-\;\:"]', "", transcripts)  # noqa: W605
 
     # Convert numbers to spoken equivelant
     transcripts = "".join(

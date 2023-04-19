@@ -12,7 +12,7 @@ from rifsalignment.algorithms import (
     StateMachineUnsupervisedNoModel,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 alignment_methods = {
     "ctc": CTC,
