@@ -55,6 +55,11 @@ def align_csv(
     if "id" in all_csv:
         # Retrieve audio and text files and parse to align
         for i, row in all_csv.iterrows():
+            if os.path.exists(os.path.join(target_path, row["id"])):
+                if verbose and not quiet:
+                    print(f"Skipping {row['id']} as it already exists")
+                continue
+
             if verbose and not quiet:
                 print(f"Aligning {row['id']}")
 
@@ -83,6 +88,11 @@ def align_csv(
             id = wav_file_path.replace(os.path.join(data_path, "audio/"), "").replace(
                 ".wav", ""
             )
+
+            if os.path.exists(os.path.join(target_path, id)):
+                if verbose and not quiet:
+                    print(f"Skipping {id} as it already exists")
+                continue
 
             if verbose and not quiet:
                 print(f"Aligning {id}")
