@@ -341,6 +341,8 @@ class StateMachineUnsupervised(BaseAlignment):
                     continue
             if pred.transcription == "":
                 continue
+            if len(set(pred.transcription)) < 4:
+                continue
             alignments.append(
                 TimedSegmentWithModelOutput(
                     start=pred.start / sr,
