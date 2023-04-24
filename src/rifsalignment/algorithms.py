@@ -253,7 +253,7 @@ class StateMachineForLevenshtein(BaseAlignment):
             for pred in all_permutations:
                 sim = ratio(pred.text.upper(), true_transcript.upper())
                 all_sims.append(sim)
-            best_alignment = all_permutations[np.argmax(all_sims)].lower()
+            best_alignment = all_permutations[np.argmax(all_sims)]
 
             if verbose and not quiet:
                 print(
