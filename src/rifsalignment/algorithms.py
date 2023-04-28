@@ -273,7 +273,7 @@ class StateMachineForLevenshtein(BaseAlignment):
                 TimedSegmentWithModelOutput(
                     start=best_alignment.start,
                     end=best_alignment.end,
-                    text=true_transcript,
+                    text=true_transcript.strip(),
                     model_output=best_alignment.text,
                 )
             )
