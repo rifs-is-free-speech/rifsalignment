@@ -280,8 +280,20 @@ class StateMachineForLevenshtein(BaseAlignment):
         end = time.time()
         if verbose and not quiet:
             print(f"Finished aligning with Levenshtein. Total time: {end - start}")
-
-        return alignments
+        if len(alignments) <= 1:
+            return alignments
+        
+        # Filter out overlapping segments
+        start = time.time()
+        filtered_alignments = []
+        for i, alignment in enumerate(alignments):
+            if i == 0:
+                filtered_alignments.append(alignment)
+            elif alignment.start == filtered_alignments[-1].start:
+                filtered_alignments[-1].text += " " + alignment.text
+                continue
+            filtered_alignments.append(alignment)
+        return filtered_alignments
 
 
 # TODO: Add a class for the state machine unsupervised (without text).
