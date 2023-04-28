@@ -289,6 +289,7 @@ class StateMachineForLevenshtein(BaseAlignment):
         for i, alignment in enumerate(alignments):
             if i == 0:
                 filtered_alignments.append(alignment)
+                continue
             elif alignment.start == filtered_alignments[-1].start:
                 filtered_alignments[-1].text += " " + alignment.text
                 continue
