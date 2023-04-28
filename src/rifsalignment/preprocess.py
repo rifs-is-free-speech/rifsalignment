@@ -31,6 +31,9 @@ def prepare_text(transcripts: List[str], prepend_placeholder: bool = False):
     # Strip every line from \n
     transcripts = [line.strip() for line in transcripts]
 
+    # Add period at end of every line if not present
+    transcripts = [line + "." if not line.endswith(".") else line for line in transcripts]
+
     # Join every line with space
     transcripts = " ".join(transcripts)
 
@@ -38,8 +41,8 @@ def prepare_text(transcripts: List[str], prepend_placeholder: bool = False):
     transcripts = re.sub('[\,\?\!\-\;\:"]', "", transcripts)  # noqa: W605
 
     # Convert numbers to spoken equivelant
-    transcripts = "".join(
-        [num2words(w, lang="dk", to="year") if w.isdigit() else w for w in transcripts]
+    transcripts = " ".join(
+        [num2words(w, lang="dk", to="year") if w.isdigit() else w for w in transcripts.split(" ")]
     )
 
     # Split and uppercase sentences. Up to -1 to remove last empty sentence after last period.
