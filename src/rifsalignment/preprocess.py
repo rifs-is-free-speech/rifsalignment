@@ -2,12 +2,12 @@
 Preprocess the transcripts for alignment.
 """
 
+import regex as re
+
 from typing import List
 from num2words import num2words
 
 from rifsalignment.datamodels import placeholder_text
-
-import regex as re
 
 
 def prepare_text(transcripts: List[str], prepend_placeholder: bool = False):
@@ -27,6 +27,7 @@ def prepare_text(transcripts: List[str], prepend_placeholder: bool = False):
     List[str]
         The prepared transcripts.
     """
+
 
     # Strip every line from \n
     transcripts = [line.strip() for line in transcripts]
