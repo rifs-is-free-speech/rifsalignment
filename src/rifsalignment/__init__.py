@@ -3,7 +3,6 @@ rifs alignment
 """
 
 from rifsalignment.align_csv import align_csv
-from rifsalignment.preprocess import prepare_text
 from rifsalignment.datamodels import TimedSegment
 from rifsalignment.algorithms import (
     CTC,
@@ -21,4 +20,4 @@ alignment_methods = {
     "StateMachineUnsupervisedNoModel": StateMachineUnsupervisedNoModel,
 }
 
-__all__ = ["alignment_methods", "align_csv", "prepare_text", "TimedSegment"]
+__all__ = ["alignment_methods", "align_csv", "TimedSegment"]
