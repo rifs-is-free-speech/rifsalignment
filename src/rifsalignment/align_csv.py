@@ -2,6 +2,12 @@
 Main way of interacting with this package.
 """
 
+from rifsalignment.base import BaseAlignment
+from rifsalignment.datamodels import TimedSegment
+
+from typing import List
+
+
 def align_csv(
     data_path: str,
     align_method: BaseAlignment,
@@ -32,16 +38,10 @@ def align_csv(
     max_duration: float
         The maximum length of a segment in seconds.
     """
-    from rifsalignment.base import BaseAlignment
-    from rifsalignment.datamodels import placeholder_text, TimedSegment
-
-    from typing import List
-    from glob import glob
-
-    import soundfile as sf
-    import pandas as pd
-    import librosa
     import os
+    import pandas as pd
+
+    from glob import glob
 
     # Load csv file
     all_csv = pd.read_csv(os.path.join(data_path, "all.csv"), header=0)
@@ -133,6 +133,10 @@ def save_alignments(
     alignments: List[TimedSegment]
         The alignments to save.
     """
+    import os
+    import librosa
+    import soundfile as sf
+    from rifsalignment.datamodels import placeholder_text
 
     # Load the audio file
     audio, sr = librosa.load(
