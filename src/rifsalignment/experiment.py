@@ -80,8 +80,18 @@ def align_experiment_folder(folder_path: str, verbose=False, quiet=False) -> Non
         outliers = 0
         lefts, rights = align_experiment(filename)
         for left, right in zip(lefts, rights):
-            text_eps_ratio = left.count("*") / len(left)
-            model_eps_ratio = right.count("*") / len(right)
+
+            n_words_missed = 0
+            for word in left.split():
+                if list(set(word)) == ["*"]:
+                    n_words_missed += 1
+            text_eps_ratio = n_words_missed / len(left.split())
+
+            n_words_missed = 0
+            for word in right.split():
+                if list(set(word)) == ["*"]:
+                    n_words_missed += 1
+            model_eps_ratio = n_words_missed / len(right.split())
 
             if text_eps_ratio > 0.1 and model_eps_ratio < 0.1:
                 if verbose and not quiet:
