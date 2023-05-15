@@ -12,7 +12,7 @@ from rifsalignment.algorithms import (
 )
 from rifsalignment.experiment import align_experiment_folder, check_for_good_alignment
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 alignment_methods = {
     "ctc": CTC,
