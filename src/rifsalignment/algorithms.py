@@ -257,7 +257,7 @@ class StateMachineForLevenshtein(BaseAlignment):
 
             if verbose and not quiet:
                 print(
-                    f"Best alignment for {true_transcript} is {best_alignment.text} with score {np.max(all_sims)}"
+                    f"Best alignment for '{true_transcript}' is '{best_alignment.text}' with score: {np.max(all_sims)}"
                 )
                 print(
                     f"True start: {best_alignment.start}, true end: {best_alignment.end}"
@@ -282,7 +282,7 @@ class StateMachineForLevenshtein(BaseAlignment):
             print(f"Finished aligning with Levenshtein. Total time: {end - start}")
         if len(alignments) <= 1:
             return alignments
-        
+
         # Filter out overlapping segments
         start = time.time()
         filtered_alignments = []
@@ -348,9 +348,7 @@ class StateMachineUnsupervised(BaseAlignment):
         alignments = []
         for pred in all_predictions_list:
             if kwargs.get("max_duration", 0) > 0:
-                if (pred.end / sr) - (pred.start / sr) > kwargs.get(
-                    "max_duration", 0
-                ):
+                if (pred.end / sr) - (pred.start / sr) > kwargs.get("max_duration", 0):
                     continue
             if pred.transcription == "":
                 continue
@@ -414,9 +412,7 @@ class StateMachineUnsupervisedNoModel(BaseAlignment):
         alignments = []
         for pred in all_predictions_list:
             if kwargs.get("max_duration", 0) > 0:
-                if (pred.end / sr) - (pred.start / sr) > kwargs.get(
-                    "max_duration", 0
-                ):
+                if (pred.end / sr) - (pred.start / sr) > kwargs.get("max_duration", 0):
                     continue
             alignments.append(
                 TimedSegmentWithModelOutput(
