@@ -5,6 +5,8 @@ Experiment code
 This module contains the code for running the experiment that can test the alignment quality.
 """
 
+import os
+
 
 def align_experiment(csv_path: str) -> None:
     """
@@ -60,9 +62,17 @@ def align_experiment_folder(folder_path: str, verbose=False, quiet=False) -> Non
     from glob import glob
 
     filenames = [x for x in glob(folder_path + "/**/segments.csv", recursive=True)]
+    total_i = 0
+    total_bad_alignment = 0
+    total_good_alignment = 0
+    total_bad_model = 0
+    total_outliers = 0
     for filename in filenames:
         if "Den2Radio" in filename:
             continue
+        if not quiet:
+            print(os.path.dirname(filename).split("/")[-1])
+
         i = 0
         bad_alignment = 0
         good_alignment = 0
@@ -104,3 +114,14 @@ def align_experiment_folder(folder_path: str, verbose=False, quiet=False) -> Non
             print(f"Good alignment: {good_alignment/i:.2f} %")
             print(f"Bad model:      {bad_model/i:.2f} %")
             print(f"Outliers:       {outliers/i:.2f} %")
+            print()
+        total_i += i
+        total_bad_alignment += bad_alignment
+        total_good_alignment += good_alignment
+        total_bad_model += bad_model
+        total_outliers += outliers
+    if not quiet:
+        print(f"Total bad alignment:  {total_bad_alignment/total_i:.2f} %")
+        print(f"Total good alignment: {total_good_alignment/total_i:.2f} %")
+        print(f"Total bad model:      {total_bad_model/total_i:.2f} %")
+        print(f"Total outliers:       {total_outliers/total_i:.2f} %")
