@@ -65,7 +65,6 @@ def align_experiment_folder(folder_path: str, verbose=False, quiet=False) -> Non
     total_i = 0
     total_bad_alignment = 0
     total_good_alignment = 0
-    total_bad_model = 0
     total_outliers = 0
     for filename in filenames:
         if "Den2Radio" in filename:
@@ -76,39 +75,53 @@ def align_experiment_folder(folder_path: str, verbose=False, quiet=False) -> Non
         i = 0
         bad_alignment = 0
         good_alignment = 0
-        bad_model = 0
         outliers = 0
         lefts, rights = align_experiment(filename)
         for left, right in zip(lefts, rights):
 
-            n_words_missed = 0
+            left_n_words_missed = 0
             for word in left.split():
                 if list(set(word)) == ["*"]:
-                    n_words_missed += 1
-            text_eps_ratio = n_words_missed / len(left.split())
+                    left_n_words_missed += 1
+                else:
+                    break
+            for word in reversed(left.split()):
+                if list(set(word)) == ["*"]:
+                    left_n_words_missed += 1
+                else:
+                    break
+            text_eps_ratio = left.count("*") / len(left)
 
-            n_words_missed = 0
+            right_n_words_missed = 0
             for word in right.split():
                 if list(set(word)) == ["*"]:
-                    n_words_missed += 1
-            model_eps_ratio = n_words_missed / len(right.split())
+                    right_n_words_missed += 1
+                else:
+                    break
 
-            if text_eps_ratio > 0.1 and model_eps_ratio < 0.1:
+            for word in reversed(right.split()):
+                if list(set(word)) == ["*"]:
+                    right_n_words_missed += 1
+                else:
+                    break
+            model_eps_ratio = right.count("*") / len(right)
+
+            if right_n_words_missed != 0 or left_n_words_missed != 0:
                 if verbose and not quiet:
                     print("Example of bad alignment:")
                 bad_alignment += 1
-            elif text_eps_ratio < 0.1 and model_eps_ratio < 0.1:
+            elif text_eps_ratio >= 0.25:
+                if verbose and not quiet:
+                    print("Example of bad text")
+                outliers += 1
+            elif model_eps_ratio >= 0.25:
+                if verbose and not quiet:
+                    print("Example of bad model")
+                outliers += 1
+            else:
                 if verbose and not quiet:
                     print("Example of good alignment:")
                 good_alignment += 1
-            elif text_eps_ratio < 0.1 and model_eps_ratio > 0.1:
-                if verbose and not quiet:
-                    print("Example of bad model:")
-                bad_model += 1
-            else:
-                if verbose and not quiet:
-                    print("Outlier:")
-                outliers += 1
 
             i += 1
             if verbose and not quiet:
@@ -118,20 +131,19 @@ def align_experiment_folder(folder_path: str, verbose=False, quiet=False) -> Non
                 print(f"Epsilon ratio in text:  {text_eps_ratio:.2f}")
                 print(f"Number of '*' in model: {right.count('*')}")
                 print(f"Epsilon ratio in model: {model_eps_ratio:.2f}")
+                print("right number of words missed: ", right_n_words_missed)
+                print("left number of words missed:  ", left_n_words_missed)
                 print()
         if not quiet:
-            print(f"Bad alignment:  {bad_alignment/i:.2f} %")
             print(f"Good alignment: {good_alignment/i:.2f} %")
-            print(f"Bad model:      {bad_model/i:.2f} %")
+            print(f"Bad alignment:  {bad_alignment/i:.2f} %")
             print(f"Outliers:       {outliers/i:.2f} %")
             print()
         total_i += i
         total_bad_alignment += bad_alignment
         total_good_alignment += good_alignment
-        total_bad_model += bad_model
         total_outliers += outliers
     if not quiet:
-        print(f"Total bad alignment:  {total_bad_alignment/total_i:.2f} %")
         print(f"Total good alignment: {total_good_alignment/total_i:.2f} %")
-        print(f"Total bad model:      {total_bad_model/total_i:.2f} %")
+        print(f"Total bad alignment:  {total_bad_alignment/total_i:.2f} %")
         print(f"Total outliers:       {total_outliers/total_i:.2f} %")
