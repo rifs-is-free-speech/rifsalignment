@@ -10,8 +10,9 @@ from rifsalignment.algorithms import (
     StateMachineUnsupervised,
     StateMachineUnsupervisedNoModel,
 )
+from rifsalignment.experiment import align_experiment_folder
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 alignment_methods = {
     "ctc": CTC,
@@ -20,4 +21,4 @@ alignment_methods = {
     "StateMachineUnsupervisedNoModel": StateMachineUnsupervisedNoModel,
 }
 
-__all__ = ["alignment_methods", "align_csv", "TimedSegment"]
+__all__ = ["alignment_methods", "align_csv", "TimedSegment", "align_experiment_folder"]
