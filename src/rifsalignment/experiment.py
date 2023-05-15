@@ -147,3 +147,63 @@ def align_experiment_folder(folder_path: str, verbose=False, quiet=False) -> Non
         print(f"Total good alignment: {total_good_alignment/total_i:.2f} %")
         print(f"Total bad alignment:  {total_bad_alignment/total_i:.2f} %")
         print(f"Total outliers:       {total_outliers/total_i:.2f} %")
+
+
+def check_for_good_alignment(left, right) -> bool:
+    """
+    Check if the alignment is good.
+
+    Parameters
+    ----------
+    left : str
+        The text to align to.
+    right : str
+        The model output to align.
+
+    Returns
+    -------
+    bool
+    """
+
+    from kaldialign import align
+
+    EPS = "*"
+    alignment = align(left, right, EPS)
+    left = "".join([x[0] if x[1] != " " else " " for x in alignment])
+    right = "".join([x[1] if x[0] != " " else " " for x in alignment])
+
+    left_n_words_missed = 0
+    for word in left.split():
+        if list(set(word)) == ["*"]:
+            left_n_words_missed += 1
+        else:
+            break
+    for word in reversed(left.split()):
+        if list(set(word)) == ["*"]:
+            left_n_words_missed += 1
+        else:
+            break
+    text_eps_ratio = left.count("*") / len(left)
+
+    right_n_words_missed = 0
+    for word in right.split():
+        if list(set(word)) == ["*"]:
+            right_n_words_missed += 1
+        else:
+            break
+
+    for word in reversed(right.split()):
+        if list(set(word)) == ["*"]:
+            right_n_words_missed += 1
+        else:
+            break
+    model_eps_ratio = right.count("*") / len(right)
+
+    if right_n_words_missed != 0 or left_n_words_missed != 0:
+        return False
+    elif text_eps_ratio >= 0.25:
+        return False
+    elif model_eps_ratio >= 0.25:
+        return False
+    else:
+        return True
